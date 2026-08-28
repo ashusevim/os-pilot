@@ -1,213 +1,207 @@
-import React, { useState } from 'react';
-import { 
-  Search, Sparkles, RotateCcw, BookOpen, Bug, HeartHandshake, Cpu, Terminal,
-  AlertTriangle, Code
-} from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, RotateCcw, AlertTriangle, Key } from 'lucide-react';
 import { PRESET_CHANNELS, PROGRAMMING_LANGUAGES, STAR_RANGES, SORT_OPTIONS } from '../types/constants';
 import IssueCard from './IssueCard';
 import Pagination from './Pagination';
 
+const DEFAULT_QUERY = 'label:"good first issue" comments:0..3';
+
 export default function IssueExplorer({
   issues, totalCount, loading, error, isFallback, rateLimit, searchParams,
-  onUpdateParams, onRefresh, onSelectIssue, bookmarkedIssueIds, onToggleBookmark
+  onUpdateParams, onRefresh, onSelectIssue, bookmarkedIssueIds, onToggleBookmark,
+  hasToken, onOpenTokenModal
 }) {
-  const [searchInput, setSearchInput] = useState(searchParams.query || '');
-  const [activeChannelId, setActiveChannelId] = useState('good-first-issue');
+  const [searchInput, setSearchInput] = useState(
+    PRESET_CHANNELS.some(ch => ch.query === searchParams.query) ? '' : (searchParams.query || '')
+  );
+  const searchRef = useRef(null);
+  const activeChannelId = PRESET_CHANNELS.find(ch => ch.query === searchParams.query)?.id || '';
 
-  const channelIcons = {
-    'good-first-issue': Sparkles, 'docs': BookOpen, 'bug-fixes': Bug,
-    'help-wanted': HeartHandshake, 'ai-ml': Cpu, 'cli-devtools': Terminal
-  };
+  useEffect(() => {
+    const channel = PRESET_CHANNELS.find(ch => ch.query === searchParams.query);
+    setSearchInput(channel ? '' : (searchParams.query || ''));
+  }, [searchParams.query]);
 
-  const handleChannelClick = (channel) => {
-    setActiveChannelId(channel.id);
-    onUpdateParams({ query: channel.query, page: 1 });
-    setSearchInput(channel.query);
-  };
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      e.preventDefault();
+      searchRef.current?.focus();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    setActiveChannelId('');
-    onUpdateParams({ query: searchInput, page: 1 });
+    const next = searchInput.trim();
+    const channel = PRESET_CHANNELS.find(c => c.id === activeChannelId);
+    if (!next) {
+      onUpdateParams({ query: channel?.query || DEFAULT_QUERY, page: 1 });
+      return;
+    }
+    onUpdateParams({ query: channel ? `${channel.query} ${next}` : next, page: 1 });
   };
 
+  const remaining = rateLimit?.remaining != null ? Number(rateLimit.remaining) : null;
+
   return (
-    <div className="space-y-5">
-      
-      {/* Hero Banner */}
-      <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-950/70 via-slate-900/90 to-[#090d16] border border-slate-800/80 p-4 sm:p-6 lg:p-8 shadow-xl gradient-border-animated">
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 sm:w-96 h-64 sm:h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-48 sm:w-80 h-48 sm:h-80 bg-cyan-500/8 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10">
-          <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-[11px] font-semibold mb-3">
-            <Sparkles className="w-3 h-3 text-cyan-400" />
-            <span>Discover Open Source Opportunities</span>
-          </div>
-
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight leading-tight mb-2">
-            Find the right issue. <span className="text-gradient">Land your first PR.</span>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-white">
+            Find an issue to work on
           </h1>
-
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-5 max-w-lg">
-            Filter GitHub issues calibrated for new contributors — clear scope, welcoming maintainers, and manageable difficulty.
+          <p className="mt-1 text-sm text-zinc-300">
+            Unassigned good-first-issues with almost no comments. Open takes you to GitHub; Guide shows git commands.
           </p>
-
-          {/* Channel Presets — 2 cols mobile, 3 cols tablet, 6 cols desktop */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
-            {PRESET_CHANNELS.map(ch => {
-              const Icon = channelIcons[ch.id] || Sparkles;
-              const isActive = activeChannelId === ch.id;
-              return (
-                <button
-                  key={ch.id}
-                  onClick={() => handleChannelClick(ch)}
-                  className={`flex items-center gap-2 p-2 sm:p-2.5 rounded-xl border text-left transition-all ${
-                    isActive
-                      ? 'bg-indigo-600/30 border-indigo-500 text-white shadow-sm'
-                      : 'bg-slate-950/60 border-slate-800/80 text-slate-300 hover:bg-slate-800/60 hover:border-slate-700'
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-cyan-300' : 'text-indigo-400'}`} />
-                  <div className="min-w-0">
-                    <span className="text-[11px] font-semibold leading-tight block truncate">{ch.name}</span>
-                    <span className={`text-[9px] ${isActive ? 'text-indigo-200' : 'text-slate-500'}`}>{ch.badge}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
         </div>
+        {!hasToken && (
+          <button type="button" onClick={onOpenTokenModal} className="btn-secondary text-sm shrink-0">
+            <Key className="w-4 h-4" /> Add GitHub token
+          </button>
+        )}
       </div>
 
-      {/* Fallback Banner */}
       {isFallback && (
-        <div className="flex items-start sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-200 text-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-amber-500/15 px-4 py-3 ring-1 ring-inset ring-amber-400/30 text-sm text-amber-50">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-            <span>
-              <strong>Offline Mode: </strong>
-              {error || 'Showing curated starter issues. Add a GitHub PAT for live search.'}
-            </span>
+            <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
+            <span>{error || 'Live GitHub search failed. Showing a small curated set — add a token for full results.'}</span>
           </div>
-          <button onClick={onRefresh} className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 font-semibold transition shrink-0 text-[11px]">
-            <RotateCcw className="w-3 h-3" /> Retry
+          <button type="button" onClick={onRefresh} className="btn-secondary py-1.5 px-3 text-sm shrink-0">
+            <RotateCcw className="w-3.5 h-3.5" /> Retry
           </button>
         </div>
       )}
 
-      {/* Search & Filters */}
-      <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-900/90 border border-slate-800 shadow-md space-y-3">
-        
-        {/* Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search keywords, labels, repos..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-700/80 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
-          <button type="submit" className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-md shadow-indigo-600/30 transition whitespace-nowrap">
-            Search
+      {!isFallback && remaining !== null && remaining <= 8 && !hasToken && (
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-indigo-500/15 px-4 py-3 ring-1 ring-inset ring-indigo-400/30 text-sm text-indigo-50">
+          <span>GitHub quota is almost gone ({remaining} left). A token unlocks 5,000 requests/hour.</span>
+          <button type="button" onClick={onOpenTokenModal} className="btn-primary py-1.5 px-3 text-sm shrink-0">
+            Add token
           </button>
-        </form>
+        </div>
+      )}
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-800/60">
-          
-          {/* Language pills — horizontally scrollable */}
-          <div className="scroll-fade-x-wrapper flex-1 min-w-0">
-            <div className="scroll-fade-x flex items-center gap-1 py-1">
-              {PROGRAMMING_LANGUAGES.slice(0, 8).map(lang => (
-                <button
-                  key={lang.name}
-                  onClick={() => onUpdateParams({ language: lang.value, page: 1 })}
-                  className={`px-2 py-1 rounded-lg text-[11px] font-medium transition whitespace-nowrap shrink-0 ${
-                    searchParams.language === lang.value
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-200'
-                  }`}
-                >
-                  {lang.name}
-                </button>
+      <form onSubmit={handleSearchSubmit} className="surface p-3 sm:p-4 space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <label className="block text-xs font-medium text-zinc-400">
+            Language
+            <select
+              value={searchParams.language}
+              onChange={(e) => onUpdateParams({ language: e.target.value, page: 1 })}
+              className="field mt-1"
+            >
+              {PROGRAMMING_LANGUAGES.map(lang => (
+                <option key={lang.name} value={lang.value}>{lang.name}</option>
               ))}
-            </div>
-          </div>
-
-          {/* Dropdowns + toggle */}
-          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            </select>
+          </label>
+          <label className="block text-xs font-medium text-zinc-400">
+            Kind of work
+            <select
+              value={activeChannelId || 'custom'}
+              onChange={(e) => {
+                const ch = PRESET_CHANNELS.find(c => c.id === e.target.value);
+                if (ch) onUpdateParams({ query: ch.query, page: 1 });
+              }}
+              className="field mt-1"
+            >
+              {PRESET_CHANNELS.map(ch => (
+                <option key={ch.id} value={ch.id}>{ch.name}</option>
+              ))}
+              {!activeChannelId && <option value="custom">Custom search</option>}
+            </select>
+          </label>
+          <label className="block text-xs font-medium text-zinc-400">
+            Repo size
             <select
               value={searchParams.starRange}
               onChange={(e) => onUpdateParams({ starRange: e.target.value, page: 1 })}
-              className="px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px] text-slate-300 focus:outline-none focus:border-indigo-500"
+              className="field mt-1"
             >
               {STAR_RANGES.map(s => <option key={s.label} value={s.value}>{s.label}</option>)}
             </select>
+          </label>
+        </div>
 
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <input
+              ref={searchRef}
+              type="search"
+              placeholder="Optional: keywords (e.g. docs, test, typo)"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              aria-label="Search keywords"
+              className="field pl-10"
+            />
+          </div>
+          <button type="submit" className="btn-primary sm:w-auto">Search</button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="inline-flex items-center gap-2 text-sm text-zinc-200 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={searchParams.onlyUnassigned}
+              onChange={(e) => onUpdateParams({ onlyUnassigned: e.target.checked, page: 1 })}
+              className="h-4 w-4 rounded border-zinc-500 bg-zinc-900 text-indigo-500 focus:ring-indigo-400"
+            />
+            Hide assigned issues
+          </label>
+          <label className="inline-flex items-center gap-2 text-sm text-zinc-400">
+            Sort
             <select
               value={searchParams.sort}
               onChange={(e) => onUpdateParams({ sort: e.target.value, page: 1 })}
-              className="px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px] text-slate-300 focus:outline-none focus:border-indigo-500"
+              className="field py-1.5 w-auto text-sm"
             >
               {SORT_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
-
-            <label className="flex items-center gap-1.5 cursor-pointer select-none px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800">
-              <input
-                type="checkbox"
-                checked={searchParams.onlyUnassigned}
-                onChange={(e) => onUpdateParams({ onlyUnassigned: e.target.checked, page: 1 })}
-                className="w-3 h-3 rounded text-indigo-600 focus:ring-0 bg-slate-900 border-slate-700"
-              />
-              <span className="text-[11px] text-slate-300 font-medium whitespace-nowrap">Unassigned</span>
-            </label>
-          </div>
+          </label>
         </div>
-      </div>
+      </form>
 
-      {/* Results Header */}
-      <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-bold text-white">Results</h3>
-          <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono text-[11px]">
-            {totalCount !== undefined ? `${totalCount.toLocaleString()} found` : '...'}
-          </span>
-        </div>
-        <button onClick={onRefresh} className="flex items-center gap-1 text-[11px] text-indigo-400 hover:text-indigo-300 transition">
-          <RotateCcw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} /> Refresh
+      <div className="flex items-center justify-between text-sm">
+        <p className="text-zinc-300">
+          {loading ? 'Loading…' : (
+            <>
+              <span className="font-semibold text-white tabular-nums">{totalCount.toLocaleString()}</span>
+              <span className="text-zinc-400"> {totalCount === 1 ? 'issue' : 'issues'}</span>
+            </>
+          )}
+        </p>
+        <button type="button" onClick={onRefresh} className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-white">
+          <RotateCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
         </button>
       </div>
 
-      {/* Issues Grid / Skeletons / Empty */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {[1, 2, 3, 4, 5, 6].map(n => (
-            <div key={n} className="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-4 sm:p-5 space-y-3 animate-pulse">
-              <div className="flex justify-between"><div className="h-4 bg-slate-800 rounded w-1/3" /><div className="h-4 bg-slate-800 rounded w-1/4" /></div>
-              <div className="h-5 bg-slate-800 rounded w-4/5" />
-              <div className="h-10 bg-slate-800/60 rounded" />
-              <div className="flex gap-2"><div className="h-3 bg-slate-800 rounded w-14" /><div className="h-3 bg-slate-800 rounded w-14" /></div>
-            </div>
+        <div className="divide-y divide-white/10 rounded-xl ring-1 ring-inset ring-white/10 overflow-hidden">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+            <div key={n} className="h-16 bg-[#18181c] animate-pulse" />
           ))}
         </div>
       ) : issues.length === 0 ? (
-        <div className="text-center py-12 px-4 rounded-2xl bg-slate-900/50 border border-slate-800/80">
-          <Sparkles className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-          <h4 className="text-sm font-bold text-white mb-1">No issues match this query</h4>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto mb-4">
-            Try broadening your search, selecting "All Languages", or picking a starter channel.
-          </p>
-          <button onClick={() => handleChannelClick(PRESET_CHANNELS[0])} className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition">
-            Reset to Good First Issues
+        <div className="text-center py-14 rounded-xl ring-1 ring-inset ring-white/10">
+          <p className="text-base font-semibold text-white mb-1">No issues for these filters</p>
+          <p className="text-sm text-zinc-300 mb-4">Try another language, or set repo size to Any Stars.</p>
+          <button
+            type="button"
+            onClick={() => onUpdateParams({ query: DEFAULT_QUERY, language: '', starRange: '', sort: 'updated-desc', onlyUnassigned: true, page: 1 })}
+            className="btn-primary"
+          >
+            Reset filters
           </button>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className="rounded-xl ring-1 ring-inset ring-white/10 overflow-hidden divide-y divide-white/[0.08] bg-[#141418]">
             {issues.map(issue => (
               <IssueCard
                 key={issue.id || issue.html_url}
@@ -218,8 +212,6 @@ export default function IssueExplorer({
               />
             ))}
           </div>
-
-          {/* Pagination */}
           <Pagination
             currentPage={searchParams.page}
             totalCount={totalCount}

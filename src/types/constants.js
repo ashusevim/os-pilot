@@ -5,7 +5,7 @@ export const PRESET_CHANNELS = [
     icon: 'Sparkles',
     color: 'emerald',
     description: 'Beginner-friendly issues curated by maintainers for new contributors',
-    query: 'label:"good first issue",beginner,easy-fix,first-timers-only',
+    query: 'label:"good first issue" comments:0..3',
     badge: 'Popular'
   },
   {
@@ -73,7 +73,7 @@ export const PROGRAMMING_LANGUAGES = [
 
 export const STAR_RANGES = [
   { label: 'Any Stars', value: '' },
-  { label: 'Sweet Spot (100 - 1k)', value: 'stars:100..1000', hint: 'Fast maintainer replies & high receptivity' },
+  { label: 'Mid-size repos (100–5k stars)', value: 'stars:100..5000', hint: 'Active maintainers, not drowning in PRs' },
   { label: 'Popular (1k - 10k)', value: 'stars:1000..10000', hint: 'Established projects & active reviews' },
   { label: 'Major Flagship (10k+)', value: 'stars:>10000', hint: 'Household open source libraries' },
   { label: 'Emerging (< 100)', value: 'stars:10..100', hint: 'Small passionate communities' },

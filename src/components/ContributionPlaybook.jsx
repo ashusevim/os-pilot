@@ -103,29 +103,26 @@ Closes #${issueNumber}`;
     <div className="space-y-6">
       
       {/* Header */}
-      <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl">
-        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold mb-2">
-          <Terminal className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Interactive Git & PR Generator</span>
-        </div>
-        <h2 className="text-2xl font-bold text-white tracking-tight">
-          Contribution Playbook & Command Center
+      <div>
+        <p className="mb-2 text-sm font-medium text-indigo-300">Git playbook</p>
+        <h2 className="text-3xl font-semibold tracking-tight text-white">
+          Commands for a clean first PR
         </h2>
-        <p className="text-xs text-slate-400 mt-1 max-w-xl">
-          Enter any repository and issue details below to auto-generate personalized, copy-paste ready Git workflows and standardized Pull Request descriptions.
+        <p className="mt-2 text-[15px] text-zinc-400 max-w-xl">
+          Fill in the repo and issue, then copy a fork → branch → commit → push workflow.
         </p>
       </div>
 
       {/* Input Configuration Panel */}
-      <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-md space-y-4">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-2">
+      <div className="p-5 rounded-2xl bg-zinc-900/90 border border-zinc-800 shadow-md space-y-4">
+        <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center space-x-2">
           <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
           <span>Configure Your Target Contribution</span>
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-zinc-300 mb-1">
               Target Repository (owner/repo)
             </label>
             <input
@@ -133,12 +130,12 @@ Closes #${issueNumber}`;
               value={repoInput}
               onChange={(e) => setRepoInput(e.target.value)}
               placeholder="e.g. astral-sh/uv or full URL"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="field font-mono"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-zinc-300 mb-1">
               Your GitHub Username
             </label>
             <input
@@ -146,12 +143,12 @@ Closes #${issueNumber}`;
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="e.g. octocat"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="field font-mono"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-zinc-300 mb-1">
               Issue Number
             </label>
             <input
@@ -159,18 +156,18 @@ Closes #${issueNumber}`;
               value={issueNumber}
               onChange={(e) => setIssueNumber(e.target.value)}
               placeholder="e.g. 1042"
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="field font-mono"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-zinc-300 mb-1">
               Commit Type
             </label>
             <select
               value={changeType}
               onChange={(e) => setChangeType(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="w-full px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 focus:outline-none focus:border-indigo-500"
             >
               <option value="fix">fix (Bug fix)</option>
               <option value="feat">feat (New feature)</option>
@@ -184,7 +181,7 @@ Closes #${issueNumber}`;
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-300 mb-1">
+          <label className="block text-xs font-semibold text-zinc-300 mb-1">
             Short Description / Branch Slug
           </label>
           <input
@@ -192,7 +189,7 @@ Closes #${issueNumber}`;
             value={issueSummary}
             onChange={(e) => setIssueSummary(e.target.value)}
             placeholder="e.g. dark-mode-toggle-docs"
-            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+            className="w-full px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 focus:outline-none focus:border-indigo-500"
           />
         </div>
       </div>
@@ -218,12 +215,12 @@ Closes #${issueNumber}`;
 
           <div className="space-y-3">
             {gitSteps.map((step, idx) => (
-              <div key={idx} className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+              <div key={idx} className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-200">{step.title}</span>
+                  <span className="text-xs font-bold text-zinc-200">{step.title}</span>
                   <button
                     onClick={() => handleCopy(step.command, idx)}
-                    className="flex items-center space-x-1 text-xs text-slate-400 hover:text-white transition"
+                    className="flex items-center space-x-1 text-xs text-zinc-400 hover:text-white transition"
                   >
                     {copiedIndex === idx ? (
                       <span className="text-emerald-400 text-xs font-semibold flex items-center space-x-1">
@@ -238,8 +235,8 @@ Closes #${issueNumber}`;
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-slate-400">{step.desc}</p>
-                <pre className="p-3 rounded-xl bg-[#070b14] border border-slate-800 text-cyan-300 font-mono text-xs overflow-x-auto whitespace-pre-wrap">
+                <p className="text-xs text-zinc-400">{step.desc}</p>
+                <pre className="p-3 rounded-xl bg-[#09090b] border border-zinc-800 text-cyan-300 font-mono text-xs overflow-x-auto whitespace-pre-wrap">
                   {step.command}
                 </pre>
               </div>
@@ -263,39 +260,39 @@ Closes #${issueNumber}`;
             </button>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
+          <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-zinc-300 mb-1">
                 Custom PR Summary (Edit live)
               </label>
               <textarea
                 rows={3}
                 value={prDescription}
                 onChange={(e) => setPrDescription(e.target.value)}
-                className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-purple-500"
+                className="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 focus:outline-none focus:border-purple-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">
+              <label className="block text-xs font-semibold text-zinc-400 mb-1">
                 Full Generated PR Body
               </label>
               <textarea
                 readOnly
                 rows={12}
                 value={generatedPRBody}
-                className="w-full p-3.5 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-slate-300 leading-relaxed focus:outline-none"
+                className="w-full p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 font-mono text-xs text-zinc-300 leading-relaxed focus:outline-none"
               />
             </div>
           </div>
 
           {/* Maintainer Golden Rules Callout */}
-          <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+          <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-2">
             <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center space-x-1.5">
               <HelpCircle className="w-4 h-4 text-amber-400" />
               <span>3 Golden Rules of PR Acceptance</span>
             </h4>
-            <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside leading-relaxed">
+            <ul className="text-xs text-zinc-300 space-y-1.5 list-disc list-inside leading-relaxed">
               <li><strong>Small & Atomic:</strong> Keep each PR focused on fixing one single issue. Avoid sneaking in formatting changes across unrelated files.</li>
               <li><strong>Write Unit Tests:</strong> A PR with passing unit tests is 10x more likely to be merged quickly by maintainers.</li>
               <li><strong>Explain "Why", Not Just "What":</strong> Describe why this approach was chosen and what edge cases were considered.</li>
@@ -308,22 +305,22 @@ Closes #${issueNumber}`;
               <ShieldAlert className="w-4 h-4 text-rose-400" />
               <span>Common First-Timer Mistakes to Avoid</span>
             </h4>
-            <div className="space-y-2 text-xs text-slate-300 leading-relaxed">
-              <div className="p-2.5 rounded-xl bg-slate-950/50 border border-slate-800">
+            <div className="space-y-2 text-xs text-zinc-300 leading-relaxed">
+              <div className="p-2.5 rounded-xl bg-zinc-950/50 border border-zinc-800">
                 <span className="font-semibold text-rose-300">❌ Committing node_modules/ or .env files</span>
-                <p className="text-slate-400 mt-0.5">Always check <code className="text-indigo-300">.gitignore</code> before staging. Run <code className="text-cyan-300">git status</code> to verify tracked files.</p>
+                <p className="text-zinc-400 mt-0.5">Always check <code className="text-indigo-300">.gitignore</code> before staging. Run <code className="text-cyan-300">git status</code> to verify tracked files.</p>
               </div>
-              <div className="p-2.5 rounded-xl bg-slate-950/50 border border-slate-800">
+              <div className="p-2.5 rounded-xl bg-zinc-950/50 border border-zinc-800">
                 <span className="font-semibold text-rose-300">❌ Force pushing to main/master</span>
-                <p className="text-slate-400 mt-0.5">Never <code className="text-cyan-300">git push --force</code> to the default branch. Only force-push to your feature branch with <code className="text-cyan-300">--force-with-lease</code>.</p>
+                <p className="text-zinc-400 mt-0.5">Never <code className="text-cyan-300">git push --force</code> to the default branch. Only force-push to your feature branch with <code className="text-cyan-300">--force-with-lease</code>.</p>
               </div>
-              <div className="p-2.5 rounded-xl bg-slate-950/50 border border-slate-800">
+              <div className="p-2.5 rounded-xl bg-zinc-950/50 border border-zinc-800">
                 <span className="font-semibold text-rose-300">❌ Mixing squash + rebase in the same PR</span>
-                <p className="text-slate-400 mt-0.5">Pick one strategy. Most repos prefer squash-merge or rebase. Check <code className="text-indigo-300">CONTRIBUTING.md</code> for guidance.</p>
+                <p className="text-zinc-400 mt-0.5">Pick one strategy. Most repos prefer squash-merge or rebase. Check <code className="text-indigo-300">CONTRIBUTING.md</code> for guidance.</p>
               </div>
-              <div className="p-2.5 rounded-xl bg-slate-950/50 border border-slate-800">
+              <div className="p-2.5 rounded-xl bg-zinc-950/50 border border-zinc-800">
                 <span className="font-semibold text-rose-300">❌ Opening a PR without reading CONTRIBUTING.md</span>
-                <p className="text-slate-400 mt-0.5">Many repos have specific branch naming, commit format, or CLA requirements. Read before coding.</p>
+                <p className="text-zinc-400 mt-0.5">Many repos have specific branch naming, commit format, or CLA requirements. Read before coding.</p>
               </div>
             </div>
           </div>
@@ -334,18 +331,18 @@ Closes #${issueNumber}`;
               <Send className="w-4 h-4 text-indigo-400" />
               <span>How to Address Common Review Comments</span>
             </h4>
-            <div className="space-y-2 text-xs text-slate-300">
-              <div className="p-2.5 rounded-xl bg-slate-950/50 border border-slate-800">
+            <div className="space-y-2 text-xs text-zinc-300">
+              <div className="p-2.5 rounded-xl bg-zinc-950/50 border border-zinc-800">
                 <p className="font-semibold text-indigo-200">"Can you add a test for this change?"</p>
-                <p className="text-slate-400 mt-1">→ Add a unit test that exercises the exact scenario your code changes. Copy an existing similar test and adapt it.</p>
+                <p className="text-zinc-400 mt-1">→ Add a unit test that exercises the exact scenario your code changes. Copy an existing similar test and adapt it.</p>
               </div>
-              <div className="p-2.5 rounded-xl bg-slate-950/50 border border-slate-800">
+              <div className="p-2.5 rounded-xl bg-zinc-950/50 border border-zinc-800">
                 <p className="font-semibold text-indigo-200">"Please rebase on main"</p>
-                <p className="text-slate-400 mt-1">→ Run <code className="text-cyan-300">git fetch upstream && git rebase upstream/main && git push --force-with-lease</code></p>
+                <p className="text-zinc-400 mt-1">→ Run <code className="text-cyan-300">git fetch upstream && git rebase upstream/main && git push --force-with-lease</code></p>
               </div>
-              <div className="p-2.5 rounded-xl bg-slate-950/50 border border-slate-800">
+              <div className="p-2.5 rounded-xl bg-zinc-950/50 border border-zinc-800">
                 <p className="font-semibold text-indigo-200">"This is out of scope for this PR"</p>
-                <p className="text-slate-400 mt-1">→ Acknowledge, revert the extra changes, and open a separate PR for the additional work.</p>
+                <p className="text-zinc-400 mt-1">→ Acknowledge, revert the extra changes, and open a separate PR for the additional work.</p>
               </div>
             </div>
           </div>

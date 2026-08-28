@@ -5,11 +5,13 @@ import {
 } from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-export default function LearningAcademy() {
+export default function LearningAcademy({ completedLessons = [], setCompletedLessons }) {
   const [activeLessonId, setActiveLessonId] = useLocalStorage('osp_active_lesson', 'codebase-navigation');
-  const [completedLessons, setCompletedLessons] = useLocalStorage('osp_completed_lessons', []);
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState({});
+
+  const completed = completedLessons;
+  const setCompleted = setCompletedLessons || (() => {});
 
   const lessons = [
     {
@@ -130,8 +132,8 @@ export default function LearningAcademy() {
   const handleSubmitQuiz = () => {
     setQuizSubmitted({ ...quizSubmitted, [currentLesson.id]: true });
     if (quizAnswers[currentLesson.id] === currentLesson.content.quiz.correctIdx) {
-      if (!completedLessons.includes(currentLesson.id)) {
-        setCompletedLessons([...completedLessons, currentLesson.id]);
+      if (!completed.includes(currentLesson.id)) {
+        setCompleted([...completed, currentLesson.id]);
       }
     }
   };
@@ -148,45 +150,43 @@ export default function LearningAcademy() {
     if (idx < lessons.length - 1) setActiveLessonId(lessons[idx + 1].id);
   };
 
-  const handleResetProgress = () => { setCompletedLessons([]); setQuizAnswers({}); setQuizSubmitted({}); };
+  const handleResetProgress = () => { setCompleted([]); setQuizAnswers({}); setQuizSubmitted({}); };
 
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-slate-900 border border-slate-800 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold mb-2">
-            <GraduationCap className="w-3 h-3 text-emerald-400" /> Mastering Open Source
-          </div>
-          <h2 className="text-lg sm:text-2xl font-bold text-white tracking-tight">Deep-Dive Learning Academy</h2>
-          <p className="text-[11px] text-slate-400 mt-1">Learn and understand deeply: architecture, git, etiquette, CI/CD, and real-world workflows.</p>
+          <p className="mb-2 text-sm font-medium text-indigo-300">Academy</p>
+          <h2 className="text-3xl font-semibold tracking-tight text-white">How open source actually works</h2>
+          <p className="mt-2 text-[15px] text-zinc-400">Architecture, git, etiquette, CI, and your first PR — six short modules.</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+          <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800">
             <Award className="w-4 h-4 text-emerald-400" />
             <div>
-              <div className="text-[11px] font-bold text-white">{completedLessons.length}/{lessons.length} Complete</div>
-              <div className="w-24 bg-slate-800 h-1 rounded-full mt-1 overflow-hidden">
-                <div className="bg-emerald-400 h-full rounded-full transition-all duration-500" style={{ width: `${(completedLessons.length / lessons.length) * 100}%` }} />
+              <div className="text-xs font-bold text-white">{completed.length}/{lessons.length} Complete</div>
+              <div className="w-24 bg-zinc-800 h-1 rounded-full mt-1 overflow-hidden">
+                <div className="bg-emerald-400 h-full rounded-full transition-all duration-500" style={{ width: `${(completed.length / lessons.length) * 100}%` }} />
               </div>
             </div>
           </div>
-          <button onClick={handleResetProgress} className="p-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition" title="Reset progress">
+          <button onClick={handleResetProgress} className="p-2 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition" title="Reset progress">
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
       {/* Mobile: Horizontal pill bar for lesson selection */}
-      <div className="lg:hidden scroll-fade-x-wrapper">
+      <div className="lg:hidden">
         <div className="scroll-fade-x flex items-center gap-1.5 pb-1">
           {lessons.map((lesson, idx) => {
             const isActive = lesson.id === currentLesson.id;
-            const isComplete = completedLessons.includes(lesson.id);
+            const isComplete = completed.includes(lesson.id);
             return (
               <button key={lesson.id} onClick={() => setActiveLessonId(lesson.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold whitespace-nowrap shrink-0 border transition ${
-                  isActive ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 border transition ${
+                  isActive ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200'
                 }`}>
                 {isComplete && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
                 <span>M{idx + 1}</span>
@@ -201,26 +201,26 @@ export default function LearningAcademy() {
         
         {/* Desktop sidebar */}
         <div className="hidden lg:block space-y-1.5">
-          <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2 mb-2">Curriculum</h3>
+          <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider px-2 mb-2">Curriculum</h3>
           {lessons.map((lesson, idx) => {
             const Icon = lesson.icon;
             const isActive = lesson.id === currentLesson.id;
-            const isComplete = completedLessons.includes(lesson.id);
+            const isComplete = completed.includes(lesson.id);
             return (
               <button key={lesson.id} onClick={() => setActiveLessonId(lesson.id)}
                 className={`w-full flex items-start gap-2.5 p-3 rounded-xl text-left transition border ${
-                  isActive ? 'bg-indigo-600/20 border-indigo-500/60 text-white' : 'bg-slate-900/70 border-slate-800/80 text-slate-300 hover:bg-slate-900 hover:border-slate-700'
+                  isActive ? 'bg-indigo-600/20 border-indigo-500/60 text-white' : 'bg-zinc-900/70 border-zinc-800/80 text-zinc-300 hover:bg-zinc-900 hover:border-zinc-700'
                 }`}>
-                <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-950 text-slate-400'}`}>
+                <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${isActive ? 'bg-indigo-600 text-white' : 'bg-zinc-950 text-zinc-400'}`}>
                   <Icon className="w-3.5 h-3.5" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <span className="text-[9px] text-indigo-400 uppercase font-semibold tracking-wider">Module {idx + 1}</span>
+                    <span className="text-xs text-indigo-400 uppercase font-semibold tracking-wider">Module {idx + 1}</span>
                     {isComplete && <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />}
                   </div>
-                  <h4 className="text-[11px] font-bold text-slate-200 line-clamp-2 leading-snug">{lesson.title}</h4>
-                  <span className="text-[9px] text-slate-500">{lesson.readTime}</span>
+                  <h4 className="text-xs font-bold text-zinc-200 line-clamp-2 leading-snug">{lesson.title}</h4>
+                  <span className="text-xs text-zinc-500">{lesson.readTime}</span>
                 </div>
               </button>
             );
@@ -231,28 +231,28 @@ export default function LearningAcademy() {
         <div className="lg:col-span-3 space-y-4 page-enter">
           
           {/* Lesson Header */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5">
+          <div className="p-4 sm:p-5 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-2.5">
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <span className="px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 font-semibold text-[11px] border border-indigo-500/30">{currentLesson.badge}</span>
-              <span className="text-[11px] text-slate-400">{currentLesson.readTime}</span>
+              <span className="px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 font-semibold text-xs border border-indigo-500/30">{currentLesson.badge}</span>
+              <span className="text-xs text-zinc-400">{currentLesson.readTime}</span>
             </div>
             <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">{currentLesson.title}</h1>
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-indigo-200 leading-relaxed">
+            <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-indigo-200 leading-relaxed">
               💡 {currentLesson.content.summary}
             </div>
           </div>
 
           {/* Sections */}
           {currentLesson.content.sections.map((section, idx) => (
-            <div key={idx} className="p-4 sm:p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+            <div key={idx} className="p-4 sm:p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-2">
               <h3 className="text-sm font-bold text-cyan-300">{section.heading}</h3>
-              <div className="text-[11px] text-slate-300 leading-relaxed whitespace-pre-wrap">{section.body}</div>
+              <div className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">{section.body}</div>
             </div>
           ))}
 
           {/* Quiz */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-indigo-500/30 space-y-3">
-            <div className="flex items-center gap-2 text-indigo-400 text-[11px] font-bold uppercase tracking-wider">
+          <div className="p-4 sm:p-5 rounded-2xl bg-zinc-900 border border-indigo-500/30 space-y-3">
+            <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> Knowledge Check
             </div>
             <h3 className="text-xs font-bold text-white">{currentLesson.content.quiz.question}</h3>
@@ -261,7 +261,7 @@ export default function LearningAcademy() {
                 const isSelected = quizAnswers[currentLesson.id] === optIdx;
                 const isSubmitted = quizSubmitted[currentLesson.id];
                 const isCorrect = optIdx === currentLesson.content.quiz.correctIdx;
-                let style = 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700';
+                let style = 'bg-zinc-950 border-zinc-800 text-zinc-300 hover:border-zinc-700';
                 if (isSubmitted) {
                   if (isCorrect) style = 'bg-emerald-950/60 border-emerald-500 text-emerald-200 font-semibold';
                   else if (isSelected) style = 'bg-rose-950/60 border-rose-500 text-rose-200';
@@ -269,8 +269,8 @@ export default function LearningAcademy() {
 
                 return (
                   <div key={optIdx} onClick={() => !isSubmitted && handleSelectQuiz(optIdx)}
-                    className={`p-3 rounded-xl border text-[11px] cursor-pointer transition flex items-center gap-2.5 ${style}`}>
-                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center text-[9px] shrink-0 ${isSelected ? 'border-indigo-400 bg-indigo-500 text-white' : 'border-slate-600'}`}>
+                    className={`p-3 rounded-xl border text-xs cursor-pointer transition flex items-center gap-2.5 ${style}`}>
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center text-xs shrink-0 ${isSelected ? 'border-indigo-400 bg-indigo-500 text-white' : 'border-zinc-600'}`}>
                       {String.fromCharCode(65 + optIdx)}
                     </div>
                     <span>{opt}</span>
@@ -287,7 +287,7 @@ export default function LearningAcademy() {
                 </button>
               ) : (
                 <div className="w-full space-y-2.5">
-                  <div className={`p-3 rounded-xl text-[11px] ${
+                  <div className={`p-3 rounded-xl text-xs ${
                     quizAnswers[currentLesson.id] === currentLesson.content.quiz.correctIdx
                       ? 'bg-emerald-950/50 border border-emerald-500/40 text-emerald-200'
                       : 'bg-rose-950/50 border border-rose-500/40 text-rose-200'
@@ -295,11 +295,11 @@ export default function LearningAcademy() {
                     <div className="font-bold mb-1">
                       {quizAnswers[currentLesson.id] === currentLesson.content.quiz.correctIdx ? '🎉 Correct!' : '❌ Not quite.'}
                     </div>
-                    <p className="text-slate-300">{currentLesson.content.quiz.explanation}</p>
+                    <p className="text-zinc-300">{currentLesson.content.quiz.explanation}</p>
                   </div>
                   <div className="flex items-center justify-between">
                     {quizAnswers[currentLesson.id] !== currentLesson.content.quiz.correctIdx && (
-                      <button onClick={handleRetryQuiz} className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] text-slate-400 hover:text-white border border-slate-800 hover:bg-slate-800 transition">
+                      <button onClick={handleRetryQuiz} className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs text-zinc-400 hover:text-white border border-zinc-800 hover:bg-zinc-800 transition">
                         <RotateCcw className="w-3 h-3" /> Try Again
                       </button>
                     )}

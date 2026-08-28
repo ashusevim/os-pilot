@@ -30,44 +30,54 @@ let debounceTimer = null;
 let activeAbortController = null;
 
 /**
- * Calculates a Contributor Viability Score (0-100) based on issue signals
+ * Calculates a Contributor Viability Score (0-100) based on issue signals.
+ * Returns { score, reasons } so the UI can explain the number.
  */
 export function calculateViabilityScore(issue) {
-  let score = 70; // baseline
+  let score = 70;
+  const reasons = [];
 
   const labels = (issue.labels || []).map(l => (typeof l === 'string' ? l : l.name).toLowerCase());
   const comments = issue.comments || 0;
   const assignees = issue.assignees || [];
-  const body = issue.body || '';
+  const body = (issue.body || '').toLowerCase();
 
-  // Positive signals
   if (labels.some(l => l.includes('good first') || l.includes('beginner') || l.includes('first-timers') || l.includes('starter'))) {
     score += 15;
+    reasons.push('Beginner-friendly label');
   }
   if (labels.some(l => l.includes('documentation') || l.includes('docs') || l.includes('typo'))) {
     score += 10;
+    reasons.push('Docs / typo — usually a fast first PR');
   }
   if (labels.some(l => l.includes('help wanted') || l.includes('up-for-grabs'))) {
     score += 8;
+    reasons.push('Maintainers explicitly want help');
   }
 
-  // Clear guidance in body
-  if (body.toLowerCase().includes('where to look') || body.toLowerCase().includes('steps to reproduce') || body.toLowerCase().includes('acceptance criteria')) {
+  if (body.includes('where to look') || body.includes('steps to reproduce') || body.includes('acceptance criteria')) {
     score += 8;
+    reasons.push('Issue has clear guidance');
   }
 
-  // Competition & Availability Penalties
   if (assignees.length > 0) {
-    score -= 35; // likely already taken
+    score -= 35;
+    reasons.push('Already assigned — likely taken');
   } else if (comments === 0) {
-    score += 10; // totally unclaimed!
+    score += 10;
+    reasons.push('Zero comments — unclaimed');
   } else if (comments <= 2) {
-    score += 5; // very low competition
+    score += 5;
+    reasons.push('Low comment competition');
   } else if (comments > 6) {
-    score -= 15; // high discussion/competition
+    score -= 15;
+    reasons.push('Busy thread — high competition');
   }
 
-  return Math.max(15, Math.min(99, score));
+  return {
+    score: Math.max(15, Math.min(99, score)),
+    reasons: reasons.length ? reasons : ['Worth evaluating as a first contribution']
+  };
 }
 
 /**
@@ -170,27 +180,27 @@ export async function searchGitHubIssues({
       };
 
       if (!res.ok) {
-        if ((res.status === 403 || res.status === 429) && attempt < maxRetries) {
-          // Exponential backoff: 1s, 3s
-          const backoffMs = Math.pow(3, attempt) * 1000;
-          await new Promise(r => setTimeout(r, backoffMs));
-          lastError = `Rate limited (${res.status})`;
-          continue;
-        }
         if (res.status === 403 || res.status === 429) {
+          if (token && attempt < maxRetries) {
+            const backoffMs = Math.pow(3, attempt) * 1000;
+            await new Promise(r => setTimeout(r, backoffMs));
+            lastError = `Rate limited (${res.status})`;
+            continue;
+          }
+          const fallback = filterCurated(cleanQuery, language);
           return {
-            issues: filterCurated(cleanQuery, language),
-            totalCount: CURATED_ISSUES.length,
+            issues: fallback,
+            totalCount: fallback.length,
             rateLimit,
             isFallback: true,
-            error: 'API rate limit exceeded. Showing curated issues. Add a GitHub PAT for 5,000 req/hr.'
+            error: 'GitHub rate limit hit. Showing a curated starter set. Add a token for live search (5,000 req/hr).'
           };
         }
         throw new Error(`GitHub API Error: ${res.status} ${res.statusText}`);
       }
 
       const data = await res.json();
-      const enrichedIssues = (data.items || []).map(item => {
+      const mappedIssues = (data.items || []).map(item => {
         const repoName = item.repository_url
           ? item.repository_url.replace(`${GITHUB_API_BASE}/repos/`, '')
           : 'unknown/repo';
@@ -212,13 +222,17 @@ export async function searchGitHubIssues({
           labels: item.labels,
           assignees: item.assignees || [],
           body: item.body || 'No description provided.',
-          viabilityScore: viability,
+          viabilityScore: viability.score,
+          viabilityReasons: viability.reasons,
+          whyGood: viability.reasons.slice(0, 2).join(' · '),
           difficulty: diff.level,
           difficultyColor: diff.color,
           estimatedTime: diff.time,
           reactions: item.reactions ? item.reactions.total_count : 0
         };
       });
+
+      const enrichedIssues = await enrichWithRepoMetadata(mappedIssues, token, signal);
 
       const result = {
         issues: enrichedIssues,
@@ -240,9 +254,10 @@ export async function searchGitHubIssues({
 
   // All retries exhausted
   console.warn('Live API request failed after retries, falling back to curated:', lastError);
+  const fallback = filterCurated(cleanQuery, language);
   return {
-    issues: filterCurated(cleanQuery, language),
-    totalCount: CURATED_ISSUES.length,
+    issues: fallback,
+    totalCount: fallback.length,
     rateLimit: null,
     isFallback: true,
     error: lastError?.message || 'Network error'
@@ -299,31 +314,123 @@ export async function fetchRepoMetadata(repoName, token = null) {
 /**
  * Filter curated issues for offline/fallback mode
  */
+function stripSearchSyntax(query) {
+  return (query || '')
+    .replace(/label:"[^"]+"/gi, '')
+    .replace(/label:\S+/gi, '')
+    .replace(/topic:\S+/gi, '')
+    .replace(/stars:\S+/gi, '')
+    .replace(/comments:\S+/gi, '')
+    .replace(/language:\S+/gi, '')
+    .replace(/no:\S+/gi, '')
+    .trim();
+}
+
 function filterCurated(query, language) {
   let list = [...CURATED_ISSUES];
   if (language) {
-    list = list.filter(i => i.language.toLowerCase() === language.toLowerCase());
+    list = list.filter(i => (i.language || '').toLowerCase() === language.toLowerCase());
   }
-  if (query) {
-    const qLower = query.toLowerCase();
-    list = list.filter(i =>
-      i.title.toLowerCase().includes(qLower) ||
-      i.repo_name.toLowerCase().includes(qLower) ||
-      i.body.toLowerCase().includes(qLower) ||
-      i.labels.some(l => l.name.toLowerCase().includes(qLower))
+  const q = stripSearchSyntax(query).toLowerCase();
+  if (q) {
+    const filtered = list.filter(i =>
+      i.title.toLowerCase().includes(q) ||
+      i.repo_name.toLowerCase().includes(q) ||
+      (i.body || '').toLowerCase().includes(q) ||
+      (i.labels || []).some(l => (l.name || '').toLowerCase().includes(q))
     );
+    if (filtered.length) list = filtered;
   }
   return list.length > 0 ? list : CURATED_ISSUES;
 }
 
 function extractLanguageFromLabels(labels = []) {
   const labelNames = labels.map(l => (typeof l === 'string' ? l : l.name).toLowerCase());
-  if (labelNames.some(l => l.includes('typescript') || l.includes('ts'))) return 'TypeScript';
-  if (labelNames.some(l => l.includes('python') || l.includes('py'))) return 'Python';
+  if (labelNames.some(l => l.includes('typescript'))) return 'TypeScript';
+  if (labelNames.some(l => l.includes('javascript'))) return 'JavaScript';
+  if (labelNames.some(l => l.includes('python'))) return 'Python';
   if (labelNames.some(l => l.includes('rust'))) return 'Rust';
-  if (labelNames.some(l => l.includes('golang') || l.includes('go'))) return 'Go';
-  if (labelNames.some(l => l.includes('javascript') || l.includes('js'))) return 'JavaScript';
-  return 'Code';
+  if (labelNames.some(l => l.includes('golang') || l === 'go')) return 'Go';
+  if (labelNames.some(l => l.includes('kotlin'))) return 'Kotlin';
+  if (labelNames.some(l => l.includes('swift'))) return 'Swift';
+  if (labelNames.some(l => l.includes('ruby'))) return 'Ruby';
+  if (labelNames.some(l => l.includes('java') && !l.includes('javascript'))) return 'Java';
+  return '';
+}
+
+/**
+ * One GraphQL request for language, stars, and license of unique repos on the page.
+ * Skipped without a token so we don't burn the unauthenticated rate limit.
+ */
+async function enrichWithRepoMetadata(issues, token, signal) {
+  if (!token || !issues.length) return issues;
+
+  const uniqueRepos = [];
+  const seen = new Set();
+  for (const issue of issues) {
+    const name = issue.repo_name;
+    if (!name || seen.has(name) || !name.includes('/')) continue;
+    seen.add(name);
+    uniqueRepos.push(name);
+    if (uniqueRepos.length >= 20) break;
+  }
+  if (uniqueRepos.length === 0) return issues;
+
+  const varDefs = [];
+  const fields = [];
+  const variables = {};
+  uniqueRepos.forEach((full, i) => {
+    const [owner, name] = full.split('/');
+    varDefs.push(`$o${i}: String!, $n${i}: String!`);
+    fields.push(
+      `r${i}: repository(owner: $o${i}, name: $n${i}) { nameWithOwner stargazerCount primaryLanguage { name } licenseInfo { spdxId } }`
+    );
+    variables[`o${i}`] = owner;
+    variables[`n${i}`] = name;
+  });
+
+  try {
+    const res = await fetch(`${GITHUB_API_BASE}/graphql`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query: `query (${varDefs.join(', ')}) {\n${fields.join('\n')}\n}`,
+        variables
+      }),
+      signal
+    });
+    if (!res.ok) return issues;
+    const json = await res.json();
+    if (!json.data) return issues;
+
+    const metaByRepo = {};
+    Object.values(json.data).forEach((repo) => {
+      if (!repo) return;
+      metaByRepo[repo.nameWithOwner] = {
+        stars: repo.stargazerCount,
+        language: repo.primaryLanguage?.name || '',
+        license: repo.licenseInfo?.spdxId || null
+      };
+    });
+
+    return issues.map((issue) => {
+      const meta = metaByRepo[issue.repo_name];
+      if (!meta) return issue;
+      return {
+        ...issue,
+        repo_stars: issue.repo_stars || meta.stars,
+        language: issue.language || meta.language,
+        license: issue.license || meta.license
+      };
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') throw err;
+    return issues;
+  }
 }
 
 /**

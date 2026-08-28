@@ -6,11 +6,9 @@ import {
   GraduationCap,
   Kanban,
   Key,
-  Sparkles,
   Command,
   ArrowRight,
-  Trash2,
-  Hash
+  Trash2
 } from 'lucide-react';
 
 const COMMANDS = [
@@ -69,26 +67,29 @@ export default function CommandPalette({ onClose, onNavigate, onOpenToken, activ
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh] p-4 bg-black/70 backdrop-blur-sm modal-backdrop"
+      className="fixed inset-0 z-[60] flex items-start justify-center pt-[18vh] p-4 bg-black/60 backdrop-blur-md modal-backdrop"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl overflow-hidden modal-enter"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command palette"
+        className="w-full max-w-lg rounded-2xl bg-[#131316] ring-1 ring-white/[0.08] shadow-2xl overflow-hidden modal-enter"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input */}
-        <div className="flex items-center px-4 py-3 border-b border-slate-800">
-          <Command className="w-4 h-4 text-indigo-400 mr-3 shrink-0" />
+        <div className="flex items-center px-4 py-3.5 border-b border-white/[0.06]">
+          <Command className="w-4 h-4 text-indigo-300 mr-3 shrink-0" />
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search commands... (navigate, token, clear)"
+            placeholder="Search commands…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 outline-none"
+            className="flex-1 bg-transparent text-sm text-zinc-100 placeholder-zinc-500 outline-none"
           />
-          <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-400 font-mono border border-slate-700">
+          <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[11px] text-zinc-500 font-mono ring-1 ring-white/10">
             ESC
           </kbd>
         </div>
@@ -96,7 +97,7 @@ export default function CommandPalette({ onClose, onNavigate, onOpenToken, activ
         {/* Command List */}
         <div className="max-h-72 overflow-y-auto py-2">
           {filtered.length === 0 ? (
-            <div className="px-4 py-8 text-center text-xs text-slate-500">
+            <div className="px-4 py-8 text-center text-sm text-zinc-500">
               No commands match "{query}"
             </div>
           ) : (
@@ -112,27 +113,27 @@ export default function CommandPalette({ onClose, onNavigate, onOpenToken, activ
                   onMouseEnter={() => setSelectedIdx(idx)}
                   className={`w-full flex items-center justify-between px-4 py-2.5 text-left text-sm transition-colors ${
                     isSelected
-                      ? 'bg-indigo-600/20 text-white'
-                      : 'text-slate-300 hover:bg-slate-800/60'
+                      ? 'bg-white/[0.06] text-white'
+                      : 'text-zinc-300 hover:bg-white/[0.04]'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <Icon className={`w-4 h-4 ${isSelected ? 'text-indigo-400' : 'text-slate-500'}`} />
-                    <span className="text-xs font-medium">{cmd.label}</span>
+                    <Icon className={`w-4 h-4 ${isSelected ? 'text-indigo-300' : 'text-zinc-500'}`} />
+                    <span className="text-sm font-medium">{cmd.label}</span>
                     {isCurrent && (
-                      <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[9px] font-bold">
-                        CURRENT
+                      <span className="px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-300 text-[11px] font-semibold">
+                        Current
                       </span>
                     )}
                   </div>
 
                   <div className="flex items-center space-x-2">
                     {cmd.shortcut && (
-                      <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-400 font-mono border border-slate-700">
+                      <kbd className="px-1.5 py-0.5 rounded text-[11px] text-zinc-500 font-mono ring-1 ring-white/10">
                         {cmd.shortcut}
                       </kbd>
                     )}
-                    <ArrowRight className={`w-3 h-3 ${isSelected ? 'text-indigo-400' : 'text-slate-600'}`} />
+                    <ArrowRight className={`w-3.5 h-3.5 ${isSelected ? 'text-indigo-300' : 'text-zinc-600'}`} />
                   </div>
                 </button>
               );
@@ -141,7 +142,7 @@ export default function CommandPalette({ onClose, onNavigate, onOpenToken, activ
         </div>
 
         {/* Hints Footer */}
-        <div className="px-4 py-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-500">
+        <div className="px-4 py-2.5 border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-500">
           <div className="flex items-center space-x-3">
             <span>↑↓ navigate</span>
             <span>↵ select</span>

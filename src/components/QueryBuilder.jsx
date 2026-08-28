@@ -170,17 +170,14 @@ export default function QueryBuilder({ onExecuteQuery }) {
     <div className="space-y-6">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-semibold mb-2">
-            <Search className="w-3.5 h-3.5 text-cyan-400" />
-            <span>GitHub Query / Dork Studio</span>
-          </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">
-            Visual Search Query Architect
+          <p className="mb-2 text-sm font-medium text-indigo-300">Query studio</p>
+          <h2 className="text-3xl font-semibold tracking-tight text-white">
+            Build a precise GitHub search
           </h2>
-          <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            Fine-tune GitHub advanced search qualifiers to uncover hidden gems, unassigned beginner tasks, and responsive repositories.
+          <p className="mt-2 text-[15px] text-zinc-400 max-w-xl">
+            Combine labels, stars, and activity to find unclaimed beginner issues.
           </p>
         </div>
 
@@ -188,7 +185,7 @@ export default function QueryBuilder({ onExecuteQuery }) {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => onExecuteQuery(currentQuery, language)}
-            className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-lg shadow-indigo-600/30 transition"
+            className="btn-primary"
           >
             <Play className="w-4 h-4 fill-white" />
             <span>Execute in Explorer</span>
@@ -198,7 +195,7 @@ export default function QueryBuilder({ onExecuteQuery }) {
             href={`https://github.com/search?q=${encodeURIComponent(currentQuery)}&type=issues`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition"
+            className="btn-secondary"
           >
             <span>GitHub.com</span>
             <ExternalLink className="w-3.5 h-3.5" />
@@ -207,7 +204,7 @@ export default function QueryBuilder({ onExecuteQuery }) {
       </div>
 
       {/* Live Query Output Bar */}
-      <div className="p-4 rounded-2xl bg-slate-950 border border-indigo-500/40 shadow-glow-sm space-y-2">
+      <div className="surface p-4 space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider flex items-center space-x-1.5">
             <Terminal className="w-3.5 h-3.5" />
@@ -221,7 +218,7 @@ export default function QueryBuilder({ onExecuteQuery }) {
             <span>{copied ? 'Copied to Clipboard!' : 'Copy Query'}</span>
           </button>
         </div>
-        <pre className="p-3 rounded-xl bg-[#070b14] border border-slate-800 text-cyan-300 font-mono text-xs overflow-x-auto whitespace-pre-wrap selection:bg-indigo-600">
+        <pre className="p-3 rounded-xl bg-[#0c0c0e] ring-1 ring-inset ring-white/[0.06] text-indigo-200 font-mono text-sm overflow-x-auto whitespace-pre-wrap">
           {currentQuery}
         </pre>
       </div>
@@ -229,13 +226,13 @@ export default function QueryBuilder({ onExecuteQuery }) {
       {/* 1-Click Dork Templates */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-2">
+          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center space-x-2">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>Curated Query Presets</span>
           </h3>
           <button
             onClick={handleSavePreset}
-            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-600 hover:text-white text-[11px] font-semibold transition"
+            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-600 hover:text-white text-xs font-semibold transition"
           >
             <Save className="w-3 h-3" />
             <span>Save Current as Preset</span>
@@ -247,12 +244,12 @@ export default function QueryBuilder({ onExecuteQuery }) {
             <div
               key={`dork-${i}`}
               onClick={() => applyTemplate(tpl)}
-              className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-indigo-500/60 hover:bg-slate-900 cursor-pointer transition-all space-y-1.5 group"
+              className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 hover:border-indigo-500/60 hover:bg-zinc-900 cursor-pointer transition-all space-y-1.5 group"
             >
-              <h4 className="text-xs font-bold text-slate-200 group-hover:text-indigo-300 transition">
+              <h4 className="text-xs font-bold text-zinc-200 group-hover:text-indigo-300 transition">
                 {tpl.title}
               </h4>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
+              <p className="text-xs text-zinc-400 leading-relaxed">
                 {tpl.desc}
               </p>
             </div>
@@ -261,18 +258,18 @@ export default function QueryBuilder({ onExecuteQuery }) {
             <div
               key={`custom-${i}`}
               onClick={() => applyTemplate(tpl)}
-              className="p-4 rounded-2xl bg-slate-900/80 border border-emerald-500/30 hover:border-emerald-500/60 hover:bg-slate-900 cursor-pointer transition-all space-y-1.5 group relative"
+              className="p-4 rounded-2xl bg-zinc-900/80 border border-emerald-500/30 hover:border-emerald-500/60 hover:bg-zinc-900 cursor-pointer transition-all space-y-1.5 group relative"
             >
               <button 
                 onClick={(e) => handleDeletePreset(e, i)}
-                className="absolute top-3 right-3 p-1 rounded bg-slate-800/80 text-slate-500 hover:text-rose-400 hover:bg-slate-800 transition opacity-0 group-hover:opacity-100"
+                className="absolute top-3 right-3 p-1 rounded bg-zinc-800/80 text-zinc-500 hover:text-rose-400 hover:bg-zinc-800 transition opacity-0 group-hover:opacity-100"
               >
                 <Trash2 className="w-3 h-3" />
               </button>
               <h4 className="text-xs font-bold text-emerald-300 group-hover:text-emerald-200 transition pr-6">
                 {tpl.title}
               </h4>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
+              <p className="text-xs text-zinc-400 leading-relaxed">
                 {tpl.desc}
               </p>
             </div>
@@ -284,13 +281,13 @@ export default function QueryBuilder({ onExecuteQuery }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Left Column: Labels & Tags */}
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+        <div className="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-4">
           <div className="flex items-center space-x-2 text-indigo-400 text-xs font-bold uppercase tracking-wider">
             <Tag className="w-4 h-4" />
             <span>Label Combiners</span>
           </div>
 
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-zinc-400">
             Click to toggle standard issue labels to target specific newcomer streams:
           </p>
 
@@ -304,7 +301,7 @@ export default function QueryBuilder({ onExecuteQuery }) {
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
                     active
                       ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
-                      : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'
+                      : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-zinc-200'
                   }`}
                 >
                   {active ? `✓ ${lbl}` : `+ ${lbl}`}
@@ -320,11 +317,11 @@ export default function QueryBuilder({ onExecuteQuery }) {
               placeholder="Add custom label (e.g. 'good-first-issue', 'security')..."
               value={customLabel}
               onChange={(e) => setCustomLabel(e.target.value)}
-              className="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              className="flex-1 px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
             />
             <button
               type="submit"
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
+              className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition"
             >
               Add
             </button>
@@ -332,7 +329,7 @@ export default function QueryBuilder({ onExecuteQuery }) {
         </div>
 
         {/* Right Column: Filters & Parameters */}
-        <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-5">
+        <div className="p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-5">
           <div className="flex items-center space-x-2 text-cyan-400 text-xs font-bold uppercase tracking-wider">
             <Sliders className="w-4 h-4" />
             <span>Repository & Competition Qualifiers</span>
@@ -340,7 +337,7 @@ export default function QueryBuilder({ onExecuteQuery }) {
 
           {/* Keywords */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
               Specific Keywords or Topics
             </label>
             <input
@@ -348,19 +345,19 @@ export default function QueryBuilder({ onExecuteQuery }) {
               placeholder="e.g. topic:ai, react, cli, compiler, auth"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              className="w-full px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
             />
           </div>
 
           {/* Language Selector */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
               Programming Language
             </label>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="w-full px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-200 focus:outline-none focus:border-indigo-500"
             >
               {PROGRAMMING_LANGUAGES.map(l => (
                 <option key={l.name} value={l.value}>{l.name}</option>
@@ -371,12 +368,12 @@ export default function QueryBuilder({ onExecuteQuery }) {
           {/* Star Range Sliders */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center space-x-2 text-slate-300 font-semibold cursor-pointer">
+              <label className="flex items-center space-x-2 text-zinc-300 font-semibold cursor-pointer">
                 <input
                   type="checkbox"
                   checked={enableStarFilter}
                   onChange={(e) => setEnableStarFilter(e.target.checked)}
-                  className="rounded bg-slate-950 border-slate-700 text-indigo-600"
+                  className="rounded bg-zinc-950 border-zinc-700 text-indigo-600"
                 />
                 <span>Repository Stars Range</span>
               </label>
@@ -390,7 +387,7 @@ export default function QueryBuilder({ onExecuteQuery }) {
             {enableStarFilter && (
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
-                  <span className="text-[10px] text-slate-400">Min Stars: {minStars}</span>
+                  <span className="text-xs text-zinc-400">Min Stars: {minStars}</span>
                   <input
                     type="range"
                     min="0"
@@ -402,7 +399,7 @@ export default function QueryBuilder({ onExecuteQuery }) {
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400">Max Stars: {maxStars}</span>
+                  <span className="text-xs text-zinc-400">Max Stars: {maxStars}</span>
                   <input
                     type="range"
                     min="100"
@@ -418,14 +415,14 @@ export default function QueryBuilder({ onExecuteQuery }) {
           </div>
 
           {/* Comment Constraint (Competition) */}
-          <div className="space-y-2 pt-2 border-t border-slate-800">
+          <div className="space-y-2 pt-2 border-t border-zinc-800">
             <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center space-x-2 text-slate-300 font-semibold cursor-pointer">
+              <label className="flex items-center space-x-2 text-zinc-300 font-semibold cursor-pointer">
                 <input
                   type="checkbox"
                   checked={enableCommentFilter}
                   onChange={(e) => setEnableCommentFilter(e.target.checked)}
-                  className="rounded bg-slate-950 border-slate-700 text-indigo-600"
+                  className="rounded bg-zinc-950 border-zinc-700 text-indigo-600"
                 />
                 <span>Max Comments (Low Competition Filter)</span>
               </label>
@@ -449,12 +446,12 @@ export default function QueryBuilder({ onExecuteQuery }) {
           </div>
 
           {/* Unassigned Only */}
-          <label className="flex items-center space-x-2.5 text-xs text-slate-300 font-semibold cursor-pointer select-none">
+          <label className="flex items-center space-x-2.5 text-xs text-zinc-300 font-semibold cursor-pointer select-none">
             <input
               type="checkbox"
               checked={onlyUnassigned}
               onChange={(e) => setOnlyUnassigned(e.target.checked)}
-              className="rounded bg-slate-950 border-slate-700 text-indigo-600"
+              className="rounded bg-zinc-950 border-zinc-700 text-indigo-600"
             />
             <span>Filter for strictly unassigned issues (`no:assignee`)</span>
           </label>

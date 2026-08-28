@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { searchGitHubIssuesDebounced } from './services/githubApi';
+import { searchGitHubIssues } from './services/githubApi';
 import Navbar from './components/Navbar';
-import StatsOverview from './components/StatsOverview';
 import IssueExplorer from './components/IssueExplorer';
 import TokenModal from './components/TokenModal';
 import IssueDetailModal from './components/IssueDetailModal';
@@ -16,6 +15,15 @@ const CommandPalette = lazy(() => import('./components/CommandPalette'));
 
 const VALID_TABS = ['discover', 'dork-studio', 'playbook', 'academy', 'kanban'];
 
+const DEFAULT_SEARCH = {
+  query: 'label:"good first issue" comments:0..3',
+  language: '',
+  starRange: '',
+  sort: 'updated-desc',
+  onlyUnassigned: true,
+  page: 1
+};
+
 function getInitialTab() {
   const hash = window.location.hash.replace('#', '');
   return VALID_TABS.includes(hash) ? hash : 'discover';
@@ -26,7 +34,7 @@ function LazyFallback() {
     <div className="flex items-center justify-center py-24">
       <div className="flex flex-col items-center space-y-3">
         <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        <span className="text-xs text-slate-400 font-medium">Loading module...</span>
+        <span className="text-xs text-zinc-400 font-medium">Loading module...</span>
       </div>
     </div>
   );
@@ -36,21 +44,13 @@ export default function App() {
   const [activeTab, setActiveTab] = useState(getInitialTab);
   const [token, setToken] = useLocalStorage('osp_github_pat', '');
   const [kanbanItems, setKanbanItems] = useLocalStorage('osp_kanban_items', []);
-  const [completedLessons] = useLocalStorage('osp_completed_lessons', []);
+  const [completedLessons, setCompletedLessons] = useLocalStorage('osp_completed_lessons', []);
   
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState(null);
 
-  // Clean search params — NO qualifiers here, they live in githubApi.js
-  const [searchParams, setSearchParams] = useState({
-    query: 'label:"good first issue",beginner,easy-fix,first-timers-only',
-    language: '',
-    starRange: '',
-    sort: 'updated-desc',
-    onlyUnassigned: true,
-    page: 1
-  });
+  const [searchParams, setSearchParams] = useLocalStorage('osp_search_params_v3', DEFAULT_SEARCH);
 
   // Issues State
   const [issues, setIssues] = useState([]);
@@ -111,7 +111,7 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
-      const result = await searchGitHubIssuesDebounced({
+      const result = await searchGitHubIssues({
         ...searchParams,
         token: token || null
       });
@@ -136,7 +136,7 @@ export default function App() {
   }, [fetchIssues]);
 
   const handleUpdateParams = (newParams) => {
-    setSearchParams(prev => ({ ...prev, ...newParams }));
+    setSearchParams(prev => ({ ...DEFAULT_SEARCH, ...prev, ...newParams }));
   };
 
   const handleExecuteFromStudio = (customQuery, customLang) => {
@@ -197,7 +197,7 @@ export default function App() {
   const bookmarkedIssueIds = kanbanItems.map(i => i.id || i.html_url);
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-transparent text-zinc-100 flex flex-col">
       
       <Navbar
         activeTab={activeTab}
@@ -209,13 +209,10 @@ export default function App() {
         kanbanItems={kanbanItems}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-5 sm:py-6">
         
-        <StatsOverview kanbanItems={kanbanItems} completedLessons={completedLessons} />
-
-        <div className="page-enter">
-          {activeTab === 'discover' && (
-            <IssueExplorer
+        {activeTab === 'discover' && (
+          <IssueExplorer
               issues={issues}
               totalCount={totalCount}
               loading={loading}
@@ -228,13 +225,20 @@ export default function App() {
               onSelectIssue={(issue) => setSelectedIssue(issue)}
               bookmarkedIssueIds={bookmarkedIssueIds}
               onToggleBookmark={handleToggleBookmark}
+              hasToken={Boolean(token)}
+              onOpenTokenModal={() => setIsTokenModalOpen(true)}
             />
           )}
 
           <Suspense fallback={<LazyFallback />}>
             {activeTab === 'dork-studio' && <QueryBuilder onExecuteQuery={handleExecuteFromStudio} />}
             {activeTab === 'playbook' && <ContributionPlaybook />}
-            {activeTab === 'academy' && <LearningAcademy />}
+            {activeTab === 'academy' && (
+              <LearningAcademy
+                completedLessons={completedLessons}
+                setCompletedLessons={setCompletedLessons}
+              />
+            )}
             {activeTab === 'kanban' && (
               <KanbanTracker
                 items={kanbanItems}
@@ -246,20 +250,17 @@ export default function App() {
               />
             )}
           </Suspense>
-        </div>
 
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950/60 py-5 mt-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
-          <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-300 font-mono">OpenSourcePilot</span>
-            <span>• Your open source journey starts here</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-slate-600">⌘K to search</span>
-            <span className="text-slate-600">1-5 switch tabs</span>
+      <footer className="border-t border-white/[0.06] py-6 mt-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between text-sm text-zinc-500 gap-3">
+          <span className="font-medium text-zinc-300">Pilot</span>
+          <div className="flex items-center gap-4 text-zinc-600">
+            <span>/ search</span>
+            <span>⌘K palette</span>
+            <span>1–5 tabs</span>
           </div>
         </div>
       </footer>
